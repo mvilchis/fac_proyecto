@@ -247,10 +247,14 @@ if UPDATE_DATA:
     df_invoices['PaymentDate'] = df_invoices.apply(complete_paymentdate, axis=1)
 
     # Conversion
-    df_invoices['SubTotalAmount'] = df_invoices.apply(trans_currency_subtotal, axis=1)
-    df_invoices['DiscountAmount'] = df_invoices.apply(trans_currency_discount, axis=1)
-    df_invoices['TotalTax'] = df_invoices.apply(trans_currency_totaltax, axis=1)
-    df_invoices['TotalAmount'] = df_invoices.apply(trans_currency_total, axis=1)
+    df_invoices['SubTotalAmount'] = df_invoices.apply(trans_currency_subtotal,
+                                                      args=('SubTotalAmount'), axis=1)
+    df_invoices['DiscountAmount'] = df_invoices.apply(trans_currency_discount,
+                                                      args=('DiscountAmount'), axis=1)
+    df_invoices['TotalTax'] = df_invoices.apply(trans_currency_totaltax,
+                                                      args=('TotalTax'), axis=1)
+    df_invoices['TotalAmount'] = df_invoices.apply(trans_currency_total,
+                                                      args=('TotalAmount'), axis=1)
 
 
     df_invoices.to_csv('./data/df_invoices.csv',header ='column_names')
@@ -334,10 +338,12 @@ if UPDATE_DATA:
     df_received['PaymentDate'] = df_received.apply(complete_paymentdate, axis=1)
 
     # conversion
-    df_received['SubTotalAmount'] = df_received.apply(trans_currency_subtotal, axis=1)
-    df_received['TotalTax'] = df_received.apply(trans_currency_totaltax, axis=1)
-    df_received['TotalAmount'] = df_received.apply(trans_currency_total, axis=1)
-
+    df_received['SubTotalAmount'] = df_received.apply(trans_currency_subtotal,
+                                                      args=('SubTotalAmount'), axis=1)
+    df_received['TotalTax'] = df_received.apply(trans_currency_totaltax,
+                                                      args=('TotalTax'), axis=1)
+    df_received['TotalAmount'] = df_received.apply(trans_currency_total,
+                                                      args=('TotalAmount'), axis=1)
     df_received.to_csv('./data/df_received.csv',header ='column_names')
 else:
     df_received = pd.read_csv('./data/df_received.csv')
