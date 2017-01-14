@@ -75,11 +75,6 @@ euro_list = ['EUR', 'EURO', 'EUROS']
 def complete_paymentdate(item):
     try:
         if np.isnan(item['PaymentDate']):
-            '''
-            Falta poner condicion sobre si la factura esta activa,
-            Segun recuerdo, si la factura no tenia PaymentDate pero
-            estaba inactiva, no podíamos asumir nada.
-            '''
             return item['InvoiceDate'] + datetime.timedelta(days=30) 
         else:
             return parser.parse(item['PaymentDate'])

@@ -56,3 +56,21 @@ def get_coords(data, addres_cols):
     res       = full_url.apply(urllib.urlopen)
     data      = res.apply(lambda x: json.loads(x.read()))
     return data
+
+## is_numeric
+def is_numeric(data, col_id):
+    '''
+    This function identifies if the given column
+    is of type numeric.
+    '''
+    if not  np.issubdtype(df_invoices[col_id].dtype, np.number): raise AssertionError
+    if pd.isnull(df_invoices[col_id]).all(): raise  AssertionError
+
+## is_null
+def is_null(data, col_id):
+    '''
+    This function checks if the given column
+    contains null types.
+    '''
+    if pd.isnull(df_invoices[col_id]).all(): raise  AssertionError
+    if not  np.issubdtype(df_invoices[col_id].dtype, np.number): raise AssertionError
