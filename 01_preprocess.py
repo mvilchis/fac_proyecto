@@ -9,12 +9,28 @@ MISSING = 'missing'
 MX_CURRENCY = 'MXN'
 USD_CURRENCY = 'DLL'
 EURO = 'EUR'
+
 #################### Functions ##########################
+
+
+'''
+ Esto hay que automatizarlo, los tipos de cambio son dinamicos...
+ hay que ademas hacer la consulta en la fecha que se llevo a cabo
+ el pago de la facturacion, si no, podemos caer en ambiguedad.
+'''
+
 currency_dict = { 'BDT': 0.2756, 'BHD': 57.6423, 'BOB': 3.14 , 'CAD': 16.601, 'COP': 0.0074, 'CRC': 0.0391, 'CZK': 0.8564,
                  USD_CURRENCY: 21.7282, 'DZD': 15.4626, 'EEK': 1.8523, EURO: 23.1434, 'GBP': 26.6706, 'GHS': 5.1078, 'ISK': 0.1906,
                  'JPY': 0.1900, 'NGN': 0.069, 'NOK': 2.5562, 'PAB': 21.7368, 'SVC': 2.4898, 'THB': 0.6147, 'TZS': 0.0098, 'VEF': 2.1772,
                 MX_CURRENCY : 1}
 
+
+'''
+ El problema de hacerlo hardcoded es que el proceso
+ de limpieza de datos no se va a automatizar facilmente
+ ¿Como tratar un dato nuevo con una codificacion que no
+ se habia visto anteriormente?
+'''
 peso_list =  [ '$','CD MELCHOR MUZQUIZ', 'CULIACAN', 'M.N', 'M.N.', 'M.X.N.', 'M/N', 'MEX','MN', 'MNX', 'MONEDA',
               'MONEDA NACIONAL', 'MONEDA PESOS M.N.', 'MSXN', 'MX', 'MX PESO', 'MX PESOS', 'MXB', 'MXM', 'MXN',
               'MXN PUEBA', 'MXN.', 'MXNC', 'MXP', 'Mexico', 'Mxn', 'N ACIONAL','NACIOAL', 'NACIOINAL', 'NACION AL',
@@ -59,37 +75,36 @@ euro_list = ['EUR', 'EURO', 'EUROS']
 def complete_paymentdate(item):
     try:
         if np.isnan(item['PaymentDate']):
-            return item['InvoiceDate'] + datetime.timedelta(days=30)
+            '''
+            Falta poner condicion sobre si la factura esta activa,
+            Segun recuerdo, si la factura no tenia PaymentDate pero
+            estaba inactiva, no podíamos asumir nada.
+            '''
+            return item['InvoiceDate'] + datetime.timedelta(days=30) 
         else:
             return parser.parse(item['PaymentDate'])
     except TypeError:
         return parser.parse(item['PaymentDate'])
 
-def trans_currency_subtotal(item):
+def trans_currency(item, field):
+    '''
+    field:
+       SubTotalAmount, DiscountAmount, 
+       TotalTax, TotalAmount
+    '''
     currency = item ['Currency']
-    value = item['SubTotalAmount']
+    value    = item[field]
     return currency_dict[currency]*value
 
-
-
-def trans_currency_discount(item):
-    currency = item ['Currency']
-    value = item['DiscountAmount']
-    return currency_dict[currency]*value
-
-
-def trans_currency_totaltax(item):
-    currency = item ['Currency']
-    value = item['TotalTax']
-    return currency_dict[currency]*value
-
-def trans_currency_total(item):
-    currency = item ['Currency']
-    value = item['TotalAmount']
-    return currency_dict[currency]*value
 
 def check_outlier_currency (serie):
-    value_list = serie.values
+    '''
+    Creo que es buena idea marcar los outliers,
+    pero creo que una buena forma de resolver este
+    problema es haciendo un clasificador de tipos
+    de monedas.
+    '''
+    value_list   = serie.values
     outlier_list = []
     for item in value_list:
         if (not item in currency_dict) and (item != MX_CURRENCY) and (item != USD_CURRENCY) and (item != EURO):
@@ -112,7 +127,7 @@ def to_int(item):
     try:
         new_item = int(item)
     except ValueError:
-        new_item = 0
+        new_item = 0 
     return new_item
 
 
