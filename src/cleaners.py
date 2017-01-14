@@ -74,3 +74,16 @@ def is_null(data, col_id):
     '''
     if pd.isnull(df_invoices[col_id]).all(): raise  AssertionError
     if not  np.issubdtype(df_invoices[col_id].dtype, np.number): raise AssertionError
+
+## is_valid
+def is_valid(data, col_id, valid_values, thresh = .01):
+    '''
+    This function checks if the valid values
+    are below a given threshold, marks an error in such case,
+    and returns the dataset containing only valid values.
+    '''
+    valids = data[not data[col_id].isin(valid_values)]
+    if len(valids) >= len(data) * thresh: raise AssertionError
+    return data[data[col_id].isin(valid_values)]
+
+##    data = pd.read_csv('../data/export_V_TaxEntities.csv')
