@@ -45,7 +45,7 @@ def rem_non_ascii(sentence):
 def get_coords(data, addres_cols):
     '''
     This function constructs the address provided
-    by the dataset and searchs for its coordinates.
+    by the data and searchs for its coordinates.
     '''
     base_url  = "https://maps.googleapis.com/maps/api/geocode/json?address="
     address   = (data.City.replace(np.nan, '', regex = True).replace(" +", "+", regex = True) + "," +
