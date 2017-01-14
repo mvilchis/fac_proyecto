@@ -107,7 +107,7 @@ def check_outlier_currency (serie):
     value_list   = serie.values
     outlier_list = []
     for item in value_list:
-        if (not item in currency_dict) and (item != MX_CURRENCY) and (item != USD_CURRENCY) and (item != EURO):
+        if not item in (currency_dict) and (item != MX_CURRENCY) and (item != USD_CURRENCY) and (item != EURO):
             outlier_list.append(item)
     return  outlier_list
 
