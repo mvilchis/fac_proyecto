@@ -86,4 +86,11 @@ def is_valid(data, col_id, valid_values, thresh = .01):
     if len(valids) >= len(data) * thresh: raise AssertionError
     return data[data[col_id].isin(valid_values)]
 
+## rem_nulls
+def rem_nulls(data, col_id):
+    '''
+    This function removes null values.
+    '''
+    return data[col_id].apply(lambda x: 0 if pd.isnull(x) else x)
+
 ##    data = pd.read_csv('../data/export_V_TaxEntities.csv')
