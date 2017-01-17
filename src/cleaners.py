@@ -32,8 +32,9 @@ from yahoo_finance import Share
 ## Constants
 ## ------------------------------
 MX_CURRENCY = 'MXN'
-USD_CURRENCY = 'DLL'
+USD_CURRENCY = 'USD'
 EURO = 'EUR'
+CURRENCY_ERROR = 'Error'
 mx_currency = ['$','MN','MEX', 'MNX', 'NACIONAL', 'PESOS', 'NAL', 'TRANSFERENCIA', 'MXP']
 usd_currency = ['DOLAR', 'DOLARES', 'DOLARES AMERICANOS','USD','DLL', 'DOL','US', 'US DOLLAR']
 euro_currency = ['EUR', 'EURO', 'EUROS']
@@ -79,17 +80,28 @@ def is_numeric(data, col_id):
     This function identifies if the given column
     is of type numeric.
     '''
-    if not  np.issubdtype(df_invoices[col_id].dtype, np.number): raise AssertionError
-    if pd.isnull(df_invoices[col_id]).all(): raise  AssertionError
+    if not  np.issubdtype(data[col_id].dtype, np.number): raise AssertionError
+    if data[col_id].isnull().sum()> 0: raise  AssertionError
 
-## is_null
-def is_null(data, col_id):
+## not_null
+def not_null(data, col_id):
     '''
     This function checks if the given column
     contains null types.
     '''
-    if pd.isnull(df_invoices[col_id]).all(): raise  AssertionError
-    if not  np.issubdtype(df_invoices[col_id].dtype, np.number): raise AssertionError
+    if data[col_id].isnull().sum()> 0: raise  AssertionError
+
+## date_valid
+def date_valid(data, col_id, start_date, finish_date = None):
+    '''
+    This function checks if all dates of data are in range
+    (start_date, finish_date)
+    '''
+    if data[col_id].min() <= start_date: raise AssertionError
+    if not finish_date:
+        finish_date = datetime.datetime.now()
+    if data[col_id].max() >= finish_date: raise AssertionError
+
 
 ## is_valid
 def is_valid(data, col_id, valid_values, thresh = .01):
@@ -98,16 +110,16 @@ def is_valid(data, col_id, valid_values, thresh = .01):
     are below a given threshold, marks an error in such case,
     and returns the dataset containing only valid values.
     '''
-    valids = data[not data[col_id].isin(valid_values)]
-    if len(valids) >= len(data) * thresh: raise AssertionError
+    valids = data[~data[col_id].isin(valid_values)]
+    if len(valids) >= len(data[col_id]) * thresh: raise AssertionError
     return data[data[col_id].isin(valid_values)]
 
 ## rem_nulls
-def rem_nulls(data, col_id):
+def rem_nulls(data, col_id, default_value = 0):
     '''
     This function removes null values.
     '''
-    return data[col_id].apply(lambda x: 0 if pd.isnull(x) else x)
+    return data[col_id].apply(lambda x: default_value if pd.isnull(x) else x)
 
 ## from_dollar_to_mx
 def from_dollar_to_mx(value, date):
@@ -124,9 +136,22 @@ def search_currency(clean_currency, date):
     '''
     This function search value of currency by date
     '''
+    if clean_currency == MX_CURRENCY:
+        return 1
+    if clean_currency == USD_CURRENCY :
+        return from_dollar_to_mx(1,date)
+
     currency = Share(clean_currency+'=x')
     historical = currency.get_historical(date, date)
     return from_dollar_to_mx(float(historical[0]['High']), date)
+
+def transform_amount(item, currency_column, amount_column, date_column):
+    currency = item [currency_column]
+    if currency == CURRENCY_ERROR:
+        return item[amount_column]
+    date  = item[date_column]
+    amount = item[amount_column]
+    return amount * search_currency(currency, date)
 
 ## get_distance_one
 def get_distance_one (row_item):
@@ -185,7 +210,7 @@ def normalize_currency(raw_currency):
     other_len = len(other_search)
     max_value = max (mx_len, usd_len, euro_len, other_len)
     if max_value == 0:
-        return 'Error'
+        return CURRENCY_ERROR
     if max_value == mx_len:
         return MX_CURRENCY
     if max_value == usd_len:
@@ -194,8 +219,6 @@ def normalize_currency(raw_currency):
         return EURO
     if max_value == other_search:
         return other_search.pop()
-    return 'Error'
+    return CURRENCY_ERROR
 
 ##    data = pd.read_csv('../data/export_V_TaxEntities.csv')
-
-
