@@ -38,9 +38,11 @@ CURRENCY_ERROR = 'Error'
 mx_currency = ['$','MN','MEX', 'MNX', 'NACIONAL', 'PESOS', 'NAL', 'TRANSFERENCIA', 'MXP']
 usd_currency = ['DOLAR', 'DOLARES', 'DOLARES AMERICANOS','USD','DLL', 'DOL','US', 'US DOLLAR']
 euro_currency = ['EUR', 'EURO', 'EUROS']
-other_currencies = ['BDT', 'BHD', 'BOB' , 'CAD', 'COP', 'CRC', 'CZK','DZD', 'EEK', 'GBP', 'GHS', 'ISK',
-                    'JPY', 'NGN', 'NOK', 'PAB', 'SVC', 'THB', 'TZS', 'VEF']
-
+other_currencies = [u'USD', u'IDR', u'BGN', u'ILS', u'GBP', u'DKK', u'CAD', u'HUF', u'RON', u'MYR',
+                  u'SEK', u'SGD', u'HKD', u'AUD', u'CHF', u'KRW', u'CNY', u'TRY', u'HRK', u'NZD',
+                  u'THB', u'EUR', u'NOK', u'RUB', u'INR', u'JPY', u'CZK', u'BRL', u'PLN', u'PHP',
+                u'ZAR']
+MISSING = 'Missing'
 
 
 ## ------------------------------
@@ -91,6 +93,34 @@ def not_null(data, col_id):
     '''
     if data[col_id].isnull().sum()> 0: raise  AssertionError
 
+## get_positive
+def get_positive(data, col_id, with_zero = False, thresh = .1):
+    if with_zero:
+        if len(data[data[col_id] < 0]) > (len(data[col_id]) * thresh) : raise AssertionError
+        return data[data[col_id] >= 0]
+    else:
+        if len(data[data[col_id] <= 0]) >= (len(data[col_id]) * thresh) : raise AssertionError
+        return data[data[col_id] > 0]
+
+def clean_amount(data, col_id, changes_id ,with_zero, not_null_values= True):
+    if not_null_values:
+	not_null(data, col_id)
+    else:
+        data[col_id] = data[col_id].apply(lambda x: 0 if pd.isnull(x) else x)
+    is_numeric(data, col_id)
+    data[col_id] = get_positive(data, col_id, with_zero)
+    data[col_id] = data.apply(transform_amount, args = (col_id, changes_id), axis = 1)
+    return data
+
+def complete_paymentdate(item):
+    try:
+    	if np.isnan(item['PaymentDate']):
+            return item['InvoiceDate'] + datetime.timedelta(days=30)
+        else:
+            return parser.parse(item['PaymentDate'])
+    except TypeError:
+        return parser.parse(item['PaymentDate'])
+
 ## date_valid
 def date_valid(data, col_id, start_date, finish_date = None):
     '''
@@ -122,27 +152,35 @@ def rem_nulls(data, col_id, default_value = 0):
     return data[col_id].apply(lambda x: default_value if pd.isnull(x) else x)
 
 ## search_currency
-def search_currency(clean_currency, date):
+def search_currency(item, currency_column, date_column):
     '''
     This function search value of currency by date
     '''
-    if clean_currency == MX_CURRENCY:
+    currency = item [currency_column]
+    date  = item[date_column].date()
+    if currency == CURRENCY_ERROR:
+        return 1
+    if currency == MX_CURRENCY:
         return 1
     fxrio = Fixerio(base='MXN')
     try:
         histo_dict = fxrio.historical_rates(date)
     except :
-        time.sleep(7)
+        time.sleep(3)
         histo_dict = fxrio.historical_rates(date)
-    return histo_dict['rates'][clean_currency]
+    return histo_dict['rates'][currency]
 
-def transform_amount(item, currency_column, amount_column, date_column):
-    currency = item [currency_column]
-    if currency == CURRENCY_ERROR:
-        return item[amount_column]
-    date  = item[date_column].date()
+
+def transform_amount(item, amount_column, change_column):
     amount = item[amount_column]
-    return amount * search_currency(currency, date)
+    change = item[change_column]
+    return amount * change
+def to_int(item):
+    try:
+        new_item = int(item)
+    except ValueError:
+        new_item = 0
+    return new_item
 
 ## get_distance_one
 def get_distance_one (row_item):
