@@ -49,6 +49,32 @@ MISSING = 'Missing'
 ## Functions
 ## ------------------------------
 
+
+
+##            generic functions
+
+## is_valid
+def is_valid(data, col_id, valid_values, thresh = .01):
+    '''
+    This function checks if the valid values
+    are below a given threshold, marks an error in such case,
+    and returns the dataset containing only valid values.
+    '''
+    valids = data[~data[col_id].isin(valid_values)]
+    if len(valids) >= len(data[col_id]) * thresh: raise AssertionError
+    return data[data[col_id].isin(valid_values)]
+
+## rem_nulls
+def rem_nulls(data, col_id, default_value = 0):
+    '''
+    This function removes null values.
+    '''
+    return data[col_id].apply(lambda x: default_value if pd.isnull(x) else x)
+
+
+
+##            string functions
+
 ## rem_non_ascii
 def rem_non_ascii(sentence):
     '''
@@ -60,6 +86,59 @@ def rem_non_ascii(sentence):
     return filter(lambda x: x in printable, sentence).lower()
 
 
+
+##          numeric functions
+
+## is_numeric
+def is_numeric(data, col_id):
+    '''
+    This function identifies if the given column
+    is of type numeric.
+    '''
+    if not  np.issubdtype(data[col_id].dtype, np.number): raise AssertionError
+    if data[col_id].isnull().sum()> 0: raise  AssertionError
+
+
+## not_null
+def not_null(data, col_id):
+    '''
+    This function checks if the given column
+    contains null types.
+    '''
+    if data[col_id].isnull().sum()> 0: raise  AssertionError
+
+
+## get_positive
+def get_positive(data, col_id, with_zero = False, thresh = .1):
+    """
+    This function return values greater  than 0 or greater equal zero
+    depends on parameter with_zero
+    """
+    if with_zero:
+        if len(data[data[col_id] < 0]) > (len(data[col_id]) * thresh) : raise AssertionError
+        return data[data[col_id] >= 0]
+    else:
+        if len(data[data[col_id] <= 0]) >= (len(data[col_id]) * thresh) : raise AssertionError
+        return data[data[col_id] > 0]
+
+
+## clean_amount
+def clean_amount(data, col_id, changes_id ,with_zero, not_null_values= True):
+    """
+    This function multiply col_id value with changes_id value
+    and check if the column has null values
+    """
+    if not_null_values:
+	not_null(data, col_id)
+    else:
+        data[col_id] = data[col_id].apply(lambda x: 0 if pd.isnull(x) else x)
+    is_numeric(data, col_id)
+    data[col_id] = get_positive(data, col_id, with_zero)
+    data[col_id] = data.apply(transform_amount, args = (col_id, changes_id), axis = 1)
+    return data
+
+
+##          normalize functions
 ## get_coords
 def get_coords(data, addres_cols):
     '''
@@ -76,41 +155,8 @@ def get_coords(data, addres_cols):
     data      = res.apply(lambda x: json.loads(x.read()))
     return data
 
-## is_numeric
-def is_numeric(data, col_id):
-    '''
-    This function identifies if the given column
-    is of type numeric.
-    '''
-    if not  np.issubdtype(data[col_id].dtype, np.number): raise AssertionError
-    if data[col_id].isnull().sum()> 0: raise  AssertionError
 
-## not_null
-def not_null(data, col_id):
-    '''
-    This function checks if the given column
-    contains null types.
-    '''
-    if data[col_id].isnull().sum()> 0: raise  AssertionError
 
-## get_positive
-def get_positive(data, col_id, with_zero = False, thresh = .1):
-    if with_zero:
-        if len(data[data[col_id] < 0]) > (len(data[col_id]) * thresh) : raise AssertionError
-        return data[data[col_id] >= 0]
-    else:
-        if len(data[data[col_id] <= 0]) >= (len(data[col_id]) * thresh) : raise AssertionError
-        return data[data[col_id] > 0]
-
-def clean_amount(data, col_id, changes_id ,with_zero, not_null_values= True):
-    if not_null_values:
-	not_null(data, col_id)
-    else:
-        data[col_id] = data[col_id].apply(lambda x: 0 if pd.isnull(x) else x)
-    is_numeric(data, col_id)
-    data[col_id] = get_positive(data, col_id, with_zero)
-    data[col_id] = data.apply(transform_amount, args = (col_id, changes_id), axis = 1)
-    return data
 
 def complete_paymentdate(item):
     try:
@@ -133,23 +179,6 @@ def date_valid(data, col_id, start_date, finish_date = None):
     if data[col_id].max() >= finish_date: raise AssertionError
 
 
-## is_valid
-def is_valid(data, col_id, valid_values, thresh = .01):
-    '''
-    This function checks if the valid values
-    are below a given threshold, marks an error in such case,
-    and returns the dataset containing only valid values.
-    '''
-    valids = data[~data[col_id].isin(valid_values)]
-    if len(valids) >= len(data[col_id]) * thresh: raise AssertionError
-    return data[data[col_id].isin(valid_values)]
-
-## rem_nulls
-def rem_nulls(data, col_id, default_value = 0):
-    '''
-    This function removes null values.
-    '''
-    return data[col_id].apply(lambda x: default_value if pd.isnull(x) else x)
 
 ## search_currency
 def search_currency(item, currency_column, date_column):
