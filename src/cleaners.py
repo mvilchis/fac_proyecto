@@ -99,6 +99,16 @@ def is_numeric(data, col_id):
     if data[col_id].isnull().sum()> 0: raise  AssertionError
 
 
+## to_int
+def to_int(item):
+    try:
+        new_item = int(item)
+    except ValueError:
+        new_item = 0
+    return new_item
+
+
+
 ## not_null
 def not_null(data, col_id):
     '''
@@ -137,6 +147,13 @@ def clean_amount(data, col_id, changes_id ,with_zero, not_null_values= True):
     data[col_id] = data.apply(transform_amount, args = (col_id, changes_id), axis = 1)
     return data
 
+## transform_amount
+def transform_amount(item, amount_column, change_column):
+    amount = item[amount_column]
+    change = item[change_column]
+    return amount * change
+
+
 
 ##          normalize functions
 ## get_coords
@@ -156,8 +173,6 @@ def get_coords(data, addres_cols):
     return data
 
 
-
-
 def complete_paymentdate(item):
     try:
     	if np.isnan(item['PaymentDate']):
@@ -166,6 +181,7 @@ def complete_paymentdate(item):
             return parser.parse(item['PaymentDate'])
     except TypeError:
         return parser.parse(item['PaymentDate'])
+
 
 ## date_valid
 def date_valid(data, col_id, start_date, finish_date = None):
@@ -177,7 +193,6 @@ def date_valid(data, col_id, start_date, finish_date = None):
     if not finish_date:
         finish_date = datetime.datetime.now()
     if data[col_id].max() >= finish_date: raise AssertionError
-
 
 
 ## search_currency
@@ -199,17 +214,6 @@ def search_currency(item, currency_column, date_column):
         histo_dict = fxrio.historical_rates(date)
     return histo_dict['rates'][currency]
 
-
-def transform_amount(item, amount_column, change_column):
-    amount = item[amount_column]
-    change = item[change_column]
-    return amount * change
-def to_int(item):
-    try:
-        new_item = int(item)
-    except ValueError:
-        new_item = 0
-    return new_item
 
 ## get_distance_one
 def get_distance_one (row_item):
