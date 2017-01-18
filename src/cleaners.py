@@ -26,8 +26,8 @@ import datetime
 import string
 import json
 import urllib
-from yahoo_finance import Share
-
+from fixerio import Fixerio
+import time
 ## ------------------------------
 ## Constants
 ## ------------------------------
@@ -121,16 +121,6 @@ def rem_nulls(data, col_id, default_value = 0):
     '''
     return data[col_id].apply(lambda x: default_value if pd.isnull(x) else x)
 
-## from_dollar_to_mx
-def from_dollar_to_mx(value, date):
-    '''
-    This function convert from dollar to mxn
-    depends on date
-    '''
-    currency = Share('MXN=x')
-    historical = currency.get_historical(date, date)
-    return value*float(historical[0]['High'])
-
 ## search_currency
 def search_currency(clean_currency, date):
     '''
@@ -138,18 +128,19 @@ def search_currency(clean_currency, date):
     '''
     if clean_currency == MX_CURRENCY:
         return 1
-    if clean_currency == USD_CURRENCY :
-        return from_dollar_to_mx(1,date)
-
-    currency = Share(clean_currency+'=x')
-    historical = currency.get_historical(date, date)
-    return from_dollar_to_mx(float(historical[0]['High']), date)
+    fxrio = Fixerio(base='MXN')
+    try:
+        histo_dict = fxrio.historical_rates(date)
+    except :
+        time.sleep(7)
+        histo_dict = fxrio.historical_rates(date)
+    return histo_dict['rates'][clean_currency]
 
 def transform_amount(item, currency_column, amount_column, date_column):
     currency = item [currency_column]
     if currency == CURRENCY_ERROR:
         return item[amount_column]
-    date  = item[date_column]
+    date  = item[date_column].date()
     amount = item[amount_column]
     return amount * search_currency(currency, date)
 
