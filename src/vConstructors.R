@@ -27,7 +27,7 @@ library(data.table)
 
 get_clients <- function(clients, invoices){
     n_clients      <- clients[, .N, by = IdTaxEntity]
-    amount_clients <- invoices[, sum(Currency), ]
+    amount_clients <- invoices[, sum(Currency), by = by = IdTaxEntity]
 }
 
 get_providers <- function(providers, invoices){

@@ -204,6 +204,7 @@ def transform_amount(item, amount_column, change_column):
     amount = item[amount_column]
     change = item[change_column]
     return amount * change
+
 def to_int(item):
     try:
         new_item = int(item)
