@@ -28,7 +28,7 @@ UPDATE_DATA = True
 #                      Paid, PaymentDate (Facturas pagadas) (17 var)
 
 if UPDATE_DATA:
-    all_invoices = pd.read_csv('../data/csv_factu/V_Invoices.csv')
+    all_invoices = pd.read_csv('../data/V_Invoices.csv')
     df_invoices = all_invoices[['IdInvoice', 'IdTaxEntity', 'IdClient', 'Status', 'InvoiceDate','Type',
                             'Currency', 'PaymentMethod', 'SubTotalAmount', 'DiscountAmount',
                             'TotalTax', 'TotalAmount', 'TaxEntityTaxName', 'TaxEntityZipCode',
