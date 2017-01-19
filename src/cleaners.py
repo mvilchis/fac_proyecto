@@ -139,11 +139,11 @@ def clean_amount(data, col_id, changes_id ,with_zero, not_null_values= True):
     and check if the column has null values
     """
     if not_null_values:
-	not_null(data, col_id)
+        not_null(data, col_id)
     else:
         data[col_id] = data[col_id].apply(lambda x: 0 if pd.isnull(x) else x)
     is_numeric(data, col_id)
-    data[col_id] = get_positive(data, col_id, with_zero)
+    data = get_positive(data, col_id, with_zero)
     data[col_id] = data.apply(transform_amount, args = (col_id, changes_id), axis = 1)
     return data
 
@@ -151,7 +151,9 @@ def clean_amount(data, col_id, changes_id ,with_zero, not_null_values= True):
 def transform_amount(item, amount_column, change_column):
     amount = item[amount_column]
     change = item[change_column]
-    return amount * change
+    if change:
+        return amount * change
+    return amount
 
 
 
