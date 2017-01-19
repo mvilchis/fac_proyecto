@@ -31,12 +31,14 @@ library(data.table)
 ## Get max mean income:
 ## (could be max sum)
 ## - Per client
-## - Per day
-## - Per Month
-## - Per year
+## - Per day   (variance per day)
+## - Per Month (variance per month)
+## - Per year  (variance per year)
 ## ------------------------------
 get_income <- function(invoices){
+    ## ---------------------
     ## Per Client
+    ## ---------------------
     c.income <- invoices[, mean(TotalAmount), by = c("IdTaxEntity",
                                                    "IdClient")]
     c.income <- c.income[, max(V1), by = IdTaxEntity]
@@ -46,13 +48,30 @@ get_income <- function(invoices){
                                                    "PaymentDate")]
     d.income <- d.income[, max(V1), by = IdTaxEntity]
     names(d.income) <- c("IdTaxEntity", "max_mean_day")
-    ## Per month
+    ## var
+    d.v.income <- invoices[, var(TotalAmount), by = c("IdTaxEntity",
+                                                     "PaymentDate")]
+    d.v.income <- d.v.income[, max(V1), by = IdTaxEntity]
+    names(d.v.income) <- c("IdTaxEntity", "max_var_month")
+    d.income   <- merge(d.income, d.v.income, by = "IdTaxEntity")
+
+    ## ---------------------
+    ## Mean Per month
+    ## ---------------------
     invoices$month <- month(invoices$PaymentDate)
-    m.income <- invoices[, mean(TotalAmount), by = c("IdTaxEntity",
-                                                   "month")]
-    m.income <- m.income[, max(V1), by = IdTaxEntity]
-    names(m.income) <- c("IdTaxEntity", "max_mean_month")
+    ## mean
+    m.income   <- invoices[, mean(TotalAmount), by = c("IdTaxEntity",
+                                                      "month")]
+    m.income   <- m.income[, max(V1), by = IdTaxEntity]
+    ## var
+    m.v.income <- invoices[, var(TotalAmount), by = c("IdTaxEntity",
+                                                     "month")]
+    m.v.income <- m.v.income[, max(V1), by = IdTaxEntity]
+    names(m.v.income) <- c("IdTaxEntity", "max_var_month")
+    m.income   <- merge(m.income, m.v.income, by = "IdTaxEntity")
+    ## ---------------------
     ## Per year
+    ## ---------------------
     invoices$year  <- year(invoices$PaymentDate)
     y.income <- invoices[, mean(TotalAmount), by = c("IdTaxEntity",
                                                    "year")]
