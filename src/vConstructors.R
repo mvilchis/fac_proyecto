@@ -23,7 +23,10 @@ library(data.table)
 
 ## ------------------------------
 ## Functions
-##
+## ------------------------------
+
+## ------------------------------
+## get_income
 ## ------------------------------
 ## Get max mean income:
 ## (could be max sum)
@@ -32,8 +35,7 @@ library(data.table)
 ## - Per Month
 ## - Per year
 ## ------------------------------
-
-get_outcome <- function(invoices){
+get_income <- function(invoices){
     ## Per Client
     c.income <- invoices[, mean(TotalAmount), by = c("IdTaxEntity",
                                                    "IdClient")]
@@ -57,10 +59,46 @@ get_outcome <- function(invoices){
     y.income <- y.income[, max(V1), by = IdTaxEntity]
     names(y.income) <- c("IdTaxEntity", "max_mean_year")
     ## Merge together
-    outcome <- merge(c.income, d.income, by = "IdTaxEntity")
-    outcome <- merge(outcome, m.income, by = "IdTaxEntity")
-    outcome <- merge(outcome, y.income, by = "IdTaxEntity")
+    income <- merge(c.income, d.income, by = "IdTaxEntity")
+    income <- merge(income, m.income, by = "IdTaxEntity")
+    income <- merge(income, y.income, by = "IdTaxEntity")
+    income
+}
+
+## ------------------------------
+## get_outcome
+## ------------------------------
+## Get max mean income:
+## (could be max sum)
+## - Per client
+## - Per day
+## - Per Month
+## - Per year
+## ------------------------------
+get_outcome <- function(received){
+    ## Per day
+    d.outcome <- received[, mean(TotalAmount), by = c("IdTaxEntity",
+                                                   "InvoiceDate")]
+    d.outcome <- d.outcome[, max(V1), by = IdTaxEntity]
+    names(d.outcome) <- c("IdTaxEntity", "max_mean_day")
+    ## Per month
+    received$month <- month(received$InvoiceDate)
+    m.outcome <- received[, mean(TotalAmount), by = c("IdTaxEntity",
+                                                   "month")]
+    m.outcome <- m.outcome[, max(V1), by = IdTaxEntity]
+    names(m.outcome) <- c("IdTaxEntity", "max_mean_month")
+    ## Per year
+    received$year  <- year(received$InvoiceDate)
+    y.outcome <- received[, mean(TotalAmount), by = c("IdTaxEntity",
+                                                   "year")]
+    y.outcome <- y.outcome[, max(V1), by = IdTaxEntity]
+    names(y.outcome) <- c("IdTaxEntity", "max_mean_year")
+    ## Merge together
+    outcome <- merge(c.outcome, d.outcome, by = "IdTaxEntity")
+    outcome <- merge(outcome, m.outcome, by = "IdTaxEntity")
+    outcome <- merge(outcome, y.outcome, by = "IdTaxEntity")
     outcome
+
 }
 
 get_providers <- function(providers){
@@ -75,6 +113,6 @@ get_employees <- function(payrolls){
 ## ------------------------------
 ## Read in data
 ## ------------------------------
-invoices <- fread('../data/final_clean/df_invoices.csv')
+received <- fread('../data/final_clean/df_received.csv')
 payrolls <- fread('../data/final_clean/df_payrolls.csv')
 received <- fread('../data/final_clean/df_received.csv')
