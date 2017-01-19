@@ -31,7 +31,7 @@ library(data.table)
 ## Get max mean income:
 ## (could be max sum)
 ## - Per client
-## - Per day   (variance per day)
+## - Per day
 ## - Per Month (variance per month)
 ## - Per year  (variance per year)
 ## ------------------------------
@@ -48,13 +48,6 @@ get_income <- function(invoices){
                                                    "PaymentDate")]
     d.income <- d.income[, max(V1), by = IdTaxEntity]
     names(d.income) <- c("IdTaxEntity", "max_mean_day")
-    ## var
-    d.v.income <- invoices[, var(TotalAmount), by = c("IdTaxEntity",
-                                                     "PaymentDate")]
-    d.v.income <- d.v.income[, max(V1), by = IdTaxEntity]
-    names(d.v.income) <- c("IdTaxEntity", "max_var_month")
-    d.income   <- merge(d.income, d.v.income, by = "IdTaxEntity")
-
     ## ---------------------
     ## Mean Per month
     ## ---------------------
@@ -77,6 +70,12 @@ get_income <- function(invoices){
                                                    "year")]
     y.income <- y.income[, max(V1), by = IdTaxEntity]
     names(y.income) <- c("IdTaxEntity", "max_mean_year")
+    ## var
+    y.v.income <- invoices[, var(TotalAmount), by = c("IdTaxEntity",
+                                                     "year")]
+    y.v.income <- y.v.income[, max(V1), by = IdTaxEntity]
+    names(y.v.income) <- c("IdTaxEntity", "max_var_year")
+    y.income   <- merge(y.income, y.v.income, by = "IdTaxEntity")
     ## Merge together
     income <- merge(c.income, d.income, by = "IdTaxEntity")
     income <- merge(income, m.income, by = "IdTaxEntity")
