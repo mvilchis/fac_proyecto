@@ -37,19 +37,21 @@ library(data.table)
 ## ------------------------------
 get_income <- function(invoices){
     ## ---------------------
-    ## Per Client
+    ## Mean Per Client
     ## ---------------------
     c.income <- invoices[, mean(TotalAmount), by = c("IdTaxEntity",
                                                    "IdClient")]
     c.income <- c.income[, max(V1), by = IdTaxEntity]
     names(c.income) <- c("IdTaxEntity", "max_mean_client")
+    ## ---------------------
     ## Per day
+    ## ---------------------
     d.income <- invoices[, mean(TotalAmount), by = c("IdTaxEntity",
                                                    "PaymentDate")]
     d.income <- d.income[, max(V1), by = IdTaxEntity]
     names(d.income) <- c("IdTaxEntity", "max_mean_day")
     ## ---------------------
-    ## Mean Per month
+    ## Mean and Var Per month
     ## ---------------------
     invoices$month <- month(invoices$PaymentDate)
     ## mean
@@ -63,7 +65,7 @@ get_income <- function(invoices){
     names(m.v.income) <- c("IdTaxEntity", "max_var_month")
     m.income   <- merge(m.income, m.v.income, by = "IdTaxEntity")
     ## ---------------------
-    ## Per year
+    ## Mean and Var Per year
     ## ---------------------
     invoices$year  <- year(invoices$PaymentDate)
     y.income <- invoices[, mean(TotalAmount), by = c("IdTaxEntity",
@@ -88,49 +90,66 @@ get_income <- function(invoices){
 ## ------------------------------
 ## Get max mean income:
 ## (could be max sum)
-## - Per client
 ## - Per day
 ## - Per Month
 ## - Per year
 ## ------------------------------
 get_outcome <- function(received){
+    ## ---------------------
     ## Per day
+    ## ---------------------
     d.outcome <- received[, mean(TotalAmount), by = c("IdTaxEntity",
                                                    "InvoiceDate")]
     d.outcome <- d.outcome[, max(V1), by = IdTaxEntity]
     names(d.outcome) <- c("IdTaxEntity", "max_mean_day")
+    ## ---------------------
     ## Per month
+    ## ---------------------
     received$month <- month(received$InvoiceDate)
     m.outcome <- received[, mean(TotalAmount), by = c("IdTaxEntity",
                                                    "month")]
     m.outcome <- m.outcome[, max(V1), by = IdTaxEntity]
     names(m.outcome) <- c("IdTaxEntity", "max_mean_month")
+    ## var
+    m.v.outcome <- received[, var(TotalAmount), by = c("IdTaxEntity",
+                                                     "month")]
+    m.v.outcome <- m.v.outcome[, max(V1), by = IdTaxEntity]
+    names(m.v.outcome) <- c("IdTaxEntity", "max_var_month")
+    m.outcome   <- merge(m.outcome, m.v.outcome, by = "IdTaxEntity")
+    ## ---------------------
     ## Per year
+    ## ---------------------
     received$year  <- year(received$InvoiceDate)
     y.outcome <- received[, mean(TotalAmount), by = c("IdTaxEntity",
                                                    "year")]
     y.outcome <- y.outcome[, max(V1), by = IdTaxEntity]
     names(y.outcome) <- c("IdTaxEntity", "max_mean_year")
+    ## Var
+    y.v.outcome <- received[, var(TotalAmount), by = c("IdTaxEntity",
+                                                     "year")]
+    y.v.outcome <- y.v.outcome[, max(V1), by = IdTaxEntity]
+    names(y.v.outcome) <- c("IdTaxEntity", "max_var_year")
+    y.outcome   <- merge(y.outcome, y.v.outcome, by = "IdTaxEntity")
     ## Merge together
     outcome <- merge(c.outcome, d.outcome, by = "IdTaxEntity")
     outcome <- merge(outcome, m.outcome, by = "IdTaxEntity")
     outcome <- merge(outcome, y.outcome, by = "IdTaxEntity")
     outcome
-
-}
-
-get_providers <- function(providers){
-    n_providers <- providers[, .N, by = 'IdTaxEntity']
-    n_providers
 }
 
 get_employees <- function(payrolls){
-    n_employees <- payrolls[, .N, by = IdTaxEntity]
+    n_employees <- payrolls[, .N, by = c("IdTaxEntity",
+                                        "Date")]
+    ##
+    sum_employees <- payrolls[, sum(TotalAmount),
+                             by = IdTaxEntity]
     n_employees
 }
+
+
 ## ------------------------------
 ## Read in data
 ## ------------------------------
-received <- fread('../data/final_clean/df_received.csv')
+invoices <- fread('../data/final_clean/df_invoices.csv')
 payrolls <- fread('../data/final_clean/df_payrolls.csv')
 received <- fread('../data/final_clean/df_received.csv')
