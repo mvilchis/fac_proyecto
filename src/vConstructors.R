@@ -138,12 +138,46 @@ get_outcome <- function(received){
 }
 
 get_employees <- function(payrolls){
-    n_employees <- payrolls[, .N, by = c("IdTaxEntity",
-                                        "Date")]
-    ##
-    sum_employees <- payrolls[, sum(TotalAmount),
-                             by = IdTaxEntity]
-    n_employees
+    ## ---------------------
+    ## Per day
+    ## ---------------------
+    d.payroll <- payrolls[, mean(TotalAmount), by = c("IdTaxEntity",
+                                                   "Date")]
+    d.payroll <- d.payroll[, max(V1), by = IdTaxEntity]
+    names(d.payroll) <- c("IdTaxEntity", "max_mean_day")
+    ## ---------------------
+    ## Per month
+    ## ---------------------
+    payrolls$month <- month(payrolls$Date)
+    m.payroll <- payrolls[, mean(TotalAmount), by = c("IdTaxEntity",
+                                                   "month")]
+    m.payroll <- m.payroll[, max(V1), by = IdTaxEntity]
+    names(m.payroll) <- c("IdTaxEntity", "max_mean_month")
+    ## var
+    m.v.payroll <- payrolls[, var(TotalAmount), by = c("IdTaxEntity",
+                                                     "month")]
+    m.v.payroll <- m.v.payroll[, max(V1), by = IdTaxEntity]
+    names(m.v.payroll) <- c("IdTaxEntity", "max_var_month")
+    m.payroll   <- merge(m.payroll, m.v.payroll, by = "IdTaxEntity")
+    ## ---------------------
+    ## Per year
+    ## ---------------------
+    payrolls$year  <- year(payrolls$Date)
+    y.payroll <- payrolls[, mean(TotalAmount), by = c("IdTaxEntity",
+                                                   "year")]
+    y.payroll <- y.payroll[, max(V1), by = IdTaxEntity]
+    names(y.payroll) <- c("IdTaxEntity", "max_mean_year")
+    ## Var
+    y.v.payroll <- payrolls[, var(TotalAmount), by = c("IdTaxEntity",
+                                                     "year")]
+    y.v.payroll <- y.v.payroll[, max(V1), by = IdTaxEntity]
+    names(y.v.payroll) <- c("IdTaxEntity", "max_var_year")
+    y.payroll   <- merge(y.payroll, y.v.payroll, by = "IdTaxEntity")
+    ## Merge together
+    payroll <- merge(c.payroll, d.payroll, by = "IdTaxEntity")
+    payroll <- merge(payroll, m.payroll, by = "IdTaxEntity")
+    payroll <- merge(payroll, y.payroll, by = "IdTaxEntity")
+    payroll
 }
 
 
@@ -152,4 +186,4 @@ get_employees <- function(payrolls){
 ## ------------------------------
 invoices <- fread('../data/final_clean/df_invoices.csv')
 payrolls <- fread('../data/final_clean/df_payrolls.csv')
-received <- fread('../data/final_clean/df_received.csv')
+payrolls <- fread('../data/final_clean/df_payrolls.csv')
