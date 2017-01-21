@@ -137,6 +137,15 @@ get_outcome <- function(received){
     outcome
 }
 
+## ------------------------------
+## get_employees
+## ------------------------------
+## Get max mean income:
+## (could be max sum)
+## - Per day
+## - Per Month
+## - Per year
+## ------------------------------
 get_employees <- function(payrolls){
     ## ---------------------
     ## Per day
