@@ -13,9 +13,6 @@
 ## ------------------------------
 # Usage:
 
-
-##
-
 ## ------------------------------
 ## Libraries
 ## ------------------------------
@@ -138,6 +135,19 @@ get_outcome <- function(received){
 }
 
 ## ------------------------------
+## get_items
+## ------------------------------
+## Get max mean income:
+## (could be max sum)
+## - Per day
+## - Per Month
+## - Per year
+## ------------------------------
+get_items <- function(){
+
+}
+
+## ------------------------------
 ## get_employees
 ## ------------------------------
 ## Get max mean income:
@@ -189,10 +199,31 @@ get_employees <- function(payrolls){
     payroll
 }
 
+##################################################
+##################################################
+#################### ANÁLISIS ####################
+##################################################
+##################################################
 
 ## ------------------------------
 ## Read in data
 ## ------------------------------
+## Still missing:
+## - Number of employees (we need the employee id).
+## - Margination Index.
+## - Max product outcome.
 invoices <- fread('../data/final_clean/df_invoices.csv')
 payrolls <- fread('../data/final_clean/df_payrolls.csv')
-payrolls <- fread('../data/final_clean/df_payrolls.csv')
+received <- fread('../data/final_clean/df_received.csv')
+
+## ------------------------------
+## Processs data
+## ------------------------------
+data.invoices <- get_income(invoices)
+data.received <- get_outcome(received)
+data.payrolls <- get_payrolls(payrolls)
+## All data
+all.data      <- merge(data.invoices,
+                      data.received)
+all.data      <- merge(all.data,
+                      data.payrolls)
