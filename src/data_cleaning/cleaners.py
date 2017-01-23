@@ -82,8 +82,12 @@ def rem_non_ascii(sentence):
     characters in sentence and sets every
     word to lower case.
     '''
-    printable = set(string.printable)
-    return filter(lambda x: x in printable, sentence).lower()
+    printable = sentence.replace('\r', '')
+    printable = printable.replace('\t', '')
+    printable = printable.replace('\n', '')
+    if not printable:
+        return MISSING
+    return printable
 
 
 
@@ -118,17 +122,15 @@ def not_null(data, col_id):
 
 
 ## get_positive
-def get_positive(data, col_id, with_zero = False, thresh = .1):
+def check_positive(data, col_id, with_zero = False, thresh = .1):
     """
     This function return values greater  than 0 or greater equal zero
     depends on parameter with_zero
     """
     if with_zero:
         if len(data[data[col_id] < 0]) > (len(data[col_id]) * thresh) : raise AssertionError
-        return data[data[col_id] >= 0].copy()
     else:
         if len(data[data[col_id] <= 0]) >= (len(data[col_id]) * thresh) : raise AssertionError
-        return data[data[col_id] > 0].copy()
 
 
 ## clean_amount
@@ -142,9 +144,14 @@ def clean_amount(data, col_id, changes_id ,with_zero, not_null_values= True):
     else:
         data[col_id] = data[col_id].apply(lambda x: 0 if pd.isnull(x) else x)
     is_numeric(data, col_id)
-    new_data = get_positive(data, col_id, with_zero)
-    new_data[col_id] = new_data.apply(transform_amount, args = (col_id, changes_id), axis = 1)
-    return new_data
+    check_positive(data, col_id, with_zero)
+    if with_zero:
+        row_index = data[col_id] >= 0
+    else:
+        row_index = data[col_id] >0
+    data = data.loc[row_index]
+    data.loc[:,col_id] = data.apply(transform_amount, args = (col_id, changes_id), axis = 1)
+    return data
 
 ## transform_amount
 def transform_amount(item, amount_column, change_column):
