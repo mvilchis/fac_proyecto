@@ -237,3 +237,12 @@ ggplot(data = data.invoices,
            col = as.factor(IdTaxEntity))) +
     geom_point() +
     theme(legend.position = "none")
+
+clean.invoices <- na.omit(data.invoices)
+invoices.prcomp <- prcomp(clean.invoices[,2:7, with = FALSE])
+ggplot(data = as.data.frame(invoices.prcomp$x),
+       aes(x = PC1,
+           y = PC2,
+           col = as.factor(clean.invoices$IdTaxEntity))) +
+    geom_point() +
+    theme(legend.position = "none")
