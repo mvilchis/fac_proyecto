@@ -53,16 +53,16 @@ MISSING = 'Missing'
 
 ##            generic functions
 
-## is_valid
-def is_valid(data, col_id, valid_values, thresh = .01):
+## get_valid
+def check_valid(data, col_id, valid_values, thresh = .01):
     '''
     This function checks if the valid values
     are below a given threshold, marks an error in such case,
     and returns the dataset containing only valid values.
     '''
-    valids = data[~data[col_id].isin(valid_values)]
-    if len(valids) >= len(data[col_id]) * thresh: raise AssertionError
-    return data[data[col_id].isin(valid_values)]
+    not_valids = data[~data[col_id].isin(valid_values)]
+    if len(not_valids) >= len(data[col_id]) * thresh: raise AssertionError
+
 
 ## rem_nulls
 def rem_nulls(data, col_id, default_value = 0):
@@ -82,8 +82,12 @@ def rem_non_ascii(sentence):
     characters in sentence and sets every
     word to lower case.
     '''
-    printable = set(string.printable)
-    return filter(lambda x: x in printable, sentence).lower()
+    printable = sentence.replace('\r', '')
+    printable = printable.replace('\t', '')
+    printable = printable.replace('\n', '')
+    if not printable:
+        return MISSING
+    return printable
 
 
 
@@ -96,7 +100,6 @@ def is_numeric(data, col_id):
     is of type numeric.
     '''
     if not  np.issubdtype(data[col_id].dtype, np.number): raise AssertionError
-    if data[col_id].isnull().sum()> 0: raise  AssertionError
 
 
 ## to_int
@@ -119,17 +122,15 @@ def not_null(data, col_id):
 
 
 ## get_positive
-def get_positive(data, col_id, with_zero = False, thresh = .1):
+def check_positive(data, col_id, with_zero = False, thresh = .1):
     """
     This function return values greater  than 0 or greater equal zero
     depends on parameter with_zero
     """
     if with_zero:
         if len(data[data[col_id] < 0]) > (len(data[col_id]) * thresh) : raise AssertionError
-        return data[data[col_id] >= 0]
     else:
         if len(data[data[col_id] <= 0]) >= (len(data[col_id]) * thresh) : raise AssertionError
-        return data[data[col_id] > 0]
 
 
 ## clean_amount
@@ -143,8 +144,13 @@ def clean_amount(data, col_id, changes_id ,with_zero, not_null_values= True):
     else:
         data[col_id] = data[col_id].apply(lambda x: 0 if pd.isnull(x) else x)
     is_numeric(data, col_id)
-    data = get_positive(data, col_id, with_zero)
-    data[col_id] = data.apply(transform_amount, args = (col_id, changes_id), axis = 1)
+    check_positive(data, col_id, with_zero)
+    if with_zero:
+        row_index = data[col_id] >= 0
+    else:
+        row_index = data[col_id] >0
+    data = data.loc[row_index]
+    data.loc[:,col_id] = data.apply(transform_amount, args = (col_id, changes_id), axis = 1)
     return data
 
 ## transform_amount
@@ -186,7 +192,7 @@ def complete_paymentdate(item):
 
 
 ## date_valid
-def date_valid(data, col_id, start_date, finish_date = None):
+def check_date_valid(data, col_id, start_date, finish_date = None):
     '''
     This function checks if all dates of data are in range
     (start_date, finish_date)
