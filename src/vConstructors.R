@@ -17,6 +17,8 @@
 ## Libraries
 ## ------------------------------
 library(data.table)
+library(tsne)
+library(ggplot2)
 
 ## ------------------------------
 ## Functions
@@ -238,6 +240,7 @@ ggplot(data = data.invoices,
     geom_point() +
     theme(legend.position = "none")
 
+## PCA
 clean.invoices <- na.omit(data.invoices)
 invoices.prcomp <- prcomp(clean.invoices[,2:7, with = FALSE])
 ggplot(data = as.data.frame(invoices.prcomp$x),
@@ -246,3 +249,6 @@ ggplot(data = as.data.frame(invoices.prcomp$x),
            col = as.factor(clean.invoices$IdTaxEntity))) +
     geom_point() +
     theme(legend.position = "none")
+
+## TSNE
+invoices.tsne <- tsne(clean.invoices[,2:7, with = FALSE])
