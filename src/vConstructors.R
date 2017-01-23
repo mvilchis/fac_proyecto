@@ -55,6 +55,7 @@ get_income <- function(invoices){
     m.income   <- invoices[, mean(TotalAmount), by = c("IdTaxEntity",
                                                       "month")]
     m.income   <- m.income[, max(V1), by = IdTaxEntity]
+    names(m.income) <- c("IdTaxEntity", "max_mean_month")
     ## var
     m.v.income <- invoices[, var(TotalAmount), by = c("IdTaxEntity",
                                                      "month")]
@@ -193,8 +194,7 @@ get_employees <- function(payrolls){
     names(y.v.payroll) <- c("IdTaxEntity", "max_var_year")
     y.payroll   <- merge(y.payroll, y.v.payroll, by = "IdTaxEntity")
     ## Merge together
-    payroll <- merge(c.payroll, d.payroll, by = "IdTaxEntity")
-    payroll <- merge(payroll, m.payroll, by = "IdTaxEntity")
+    payroll <- merge(d.payroll, m.payroll, by = "IdTaxEntity")
     payroll <- merge(payroll, y.payroll, by = "IdTaxEntity")
     payroll
 }
@@ -221,9 +221,19 @@ received <- fread('../data/final_clean/df_received.csv')
 ## ------------------------------
 data.invoices <- get_income(invoices)
 data.received <- get_outcome(received)
-data.payrolls <- get_payrolls(payrolls)
+data.payrolls <- get_employees(payrolls)
+
 ## All data
 all.data      <- merge(data.invoices,
                       data.received)
-all.data      <- merge(all.data,
-                      data.payrolls)
+all.data      <- merge(data.invoices,
+                      data.payrolls,
+                      by = "IdTaxEntity")
+
+## Plots
+ggplot(data = data.invoices,
+       aes(x = max_mean_client,
+           y = max_mean_day,
+           col = as.factor(IdTaxEntity))) +
+    geom_point() +
+    theme(legend.position = "none")
