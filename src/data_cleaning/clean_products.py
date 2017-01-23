@@ -35,7 +35,7 @@ if UPDATE_DATA:
     print "Tocsv"
     df_products.to_csv('../../data/df_products.csv',  header = 'column_names', index = False,  encoding='utf-8')
     df_tax = pd.DataFrame(df_products.groupby('IdTaxEntity').size())
-    df_tax.to_csv('../../data/df_taxentity.csv',  header = 'column_names')
+    df_tax.to_csv('../../data/df_taxentity.csv',  header = 'column_names', index = False)
 else:
     df_products = pd.read_csv('../../data/df_products')
 

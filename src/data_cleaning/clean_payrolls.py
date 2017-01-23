@@ -71,7 +71,7 @@ if UPDATE_DATA:
     print "TotalAmount"
     df_payrolls = clean_amount(df_payrolls, 'TotalAmount', 'Changes', with_zero = True, not_null_values = False)
 
-    df_payrolls.to_csv('../../data/df_payrolls.csv', header = 'column_names')
+    df_payrolls.to_csv('../../data/df_payrolls.csv', header = 'column_names', index = False)
 else:
     df_payrolls = read_csv('../../data/df_payrolls.csv')
 
